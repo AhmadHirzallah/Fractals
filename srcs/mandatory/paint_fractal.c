@@ -3,37 +3,6 @@
 #include "libft.h"
 #include "fractal.h"
 
-/*
- * Sets the initial complex numbers for the current pixel.
- * For Mandelbrot, the constant c is derived from the pixel coordinates,
- * and z is set to 0.
- * For Julia, c is constant (already set during initialization),
- * and z is mapped from the pixel coordinates.
- */
-// static void set_initial_complex_nbrs(t_fractal *fractal, int x, int y)
-// {
-//     if (fractal->fractol_type == JULIA)
-//     {
-//         fractal->z.real_part = map_pixel_to_complex_plane(x, WIDTH,
-//                                     fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
-//         fractal->z.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
-//                                     fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
-//     }
-//     else if(fractal->fractol_type == MANDELBROT)
-//     {
-//         fractal->c.real_part = map_pixel_to_complex_plane(x, WIDTH,
-//                                     fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
-//         fractal->c.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
-//                                     fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
-//         fractal->z.real_part = 0.0;
-//         fractal->z.imgnry_part = 0.0;
-//     }
-// 	else if (fractal->fractol_type == BURNING_SHIP)
-// 	{
-// 		fractal->c.real_part = fabs(fractal->c.real_part);
-//         fractal->c.imgnry_part = fabs(fractal->c.imgnry_part);
-// 	}
-// }
 
 
 /*
@@ -41,29 +10,57 @@
  * For JULIA, z is mapped from the pixel; for Mandelbrot/Burning Ship, c is derived
  * from the pixel coordinates and z is set to 0.
  * In Burning Ship, c is made positive.
+ * - fabs(fractal->c.real_part) and fabs(fractal->c.imgnry_part) in the BURNING_SHIP
+ *      - those values should come from the pixel coordinates
+ * - maps pixel coordinates (x, y) to complex numbers,
+ *  initializing the values of z and c (depending on the fractal type,
+ *  e.g., Mandelbrot, Julia, or Burning Ship)
  */
+// static void set_initial_complex_nbrs(t_fractal *fractal, int x, int y)
+// {
+// 	fractal->z.real_part = 0.0;
+//     fractal->z.imgnry_part = 0.0;
+//     if (fractal->fractol_type == JULIA)
+//     {
+//         fractal->z.real_part = map_pixel_to_complex_plane(x, WIDTH,
+//                                     fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+//         fractal->z.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+//                                     fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+//         return ;
+//     }
+//     else
+//     {
+//         fractal->c.real_part = map_pixel_to_complex_plane(x, WIDTH,
+//                 fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+//         fractal->c.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+//                 fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+// 		if (fractal->fractol_type == BURNING_SHIP)
+// 		{
+// 			fractal->c.real_part = fabs(fractal->c.real_part);
+// 			fractal->c.imgnry_part = fabs(fractal->c.imgnry_part);
+// 		}
+//     }
+// }
+
 static void set_initial_complex_nbrs(t_fractal *fractal, int x, int y)
 {
+    fractal->z.real_part = 0.0;
+    fractal->z.imgnry_part = 0.0;
+
     if (fractal->fractol_type == JULIA)
     {
         fractal->z.real_part = map_pixel_to_complex_plane(x, WIDTH,
-                                    fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+                                        fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
         fractal->z.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
-                                    fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+                                        fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+        return ;
     }
-    else  // Mandelbrot or Burning Ship
+    else
     {
         fractal->c.real_part = map_pixel_to_complex_plane(x, WIDTH,
-                                    fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+                                        fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
         fractal->c.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
-                                    fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
-        fractal->z.real_part = 0.0;
-        fractal->z.imgnry_part = 0.0;
-        if (fractal->fractol_type == BURNING_SHIP)
-        {
-            fractal->c.real_part = fabs(fractal->c.real_part);
-            fractal->c.imgnry_part = fabs(fractal->c.imgnry_part);
-        }
+                                        fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
     }
 }
 
@@ -84,12 +81,12 @@ int render_a_fractal(t_fractal *fractal, int x, int y, const unsigned int *palet
 	i = 0;
     while (i < fractal->settings_fractal.iterations_depth)
     {
-		z = fractal_iteration(z, fractal->c);
+		z = fractal_iteration(z, fractal->c, fractal->fractol_type);
 		if (magnitude_squared_complex(z) > escape_limit_sq)
 		{
 			put_pixel(x, y, &fractal->mlx_data.image,
-                         generate_color((double)i, fractal->settings_fractal.iterations_depth,
-						 				palette, 7));
+                        generate_color((double)i, fractal->settings_fractal.iterations_depth,
+						palette, 7));
             return 0;
 		}
         i++;
@@ -122,7 +119,6 @@ int paint_fractal(t_fractal *fractal)
     }
 	mlx_put_image_to_window(fractal->mlx_data.conn_display, fractal->mlx_data.window,
 							fractal->mlx_data.image.img_ptr, 0, 0);
-
     mlx_loop(fractal->mlx_data.conn_display);
     return (0);
 }

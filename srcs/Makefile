@@ -3,14 +3,14 @@ NAME        := ../fractol
 # Compiler settings
 CC          := cc
 CFLAGS      := -Wall -Wextra -Werror -g -I../include -MMD -MP
-LDFLAGS     := -Lminilibx-linux -lmlx -lXext -lX11 -lm -L../libs -lft
+LDFLAGS     := -lmlx -lXext -lX11 -lm -L../libs -lft -lftprintf
 
 # Directories
 SRCDIR      := mandatory
 OBJDIR      := ../objs/srcs/mandatory
 
 # Source files for fractol
-SRCS        := color.c hooks.c init_fractal.c main.c paint_fractal.c termination.c utils.c utils_math.c
+SRCS        := color.c hooks.c init_fractal.c main.c paint_fractal.c termination.c utils.c utils_math.c hook_utils.c
 OBJS        := $(addprefix $(OBJDIR)/, $(SRCS:.c=.o))
 DEPS        := $(OBJS:.o=.d)  # Dependency files
 
@@ -22,7 +22,7 @@ $(NAME): $(OBJS) | $(OBJDIR)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@
-	
+
 $(OBJDIR):
 	mkdir -p $(OBJDIR)
 

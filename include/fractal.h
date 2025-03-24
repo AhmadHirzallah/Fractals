@@ -6,24 +6,33 @@
 # include <X11/X.h>
 # include <X11/keysym.h>
 # include <math.h>
+# include "ft_printf.h"
 
-# define ITER_DEPTH 100
+# define ITER_DEPTH 20
 # define ZOOM_FACTOR 1.30
+# define SHIFT_FACTOR 5.30
 # define ESCAPE_RADIUS 2.0
-// # define WIDTH 1400
-// # define HEIGHT 1200
 # define WIDTH 1000
 # define HEIGHT 800
 
-
-# define X_MIN -2.5
-# define X_MAX 1.0
-# define Y_MIN -1.5
-# define Y_MAX 1.5
+// # define WIDTH 1400
+// # define HEIGHT 1200
+// # define X_MIN -2.5
+// # define X_MAX 1.0
+// # define Y_MIN -1.5
+// # define Y_MAX 1.5
 
 #define NUM_COLORS 10
 
-
+enum	e_shifting_director
+{
+	SHIFT_UPWARD,
+	SHIFT_DOWNWARD,
+	SHIFT_TORIGHT,
+	SHIFT_TOLEFT,
+	ZOOM_IN,
+	ZOOM_OUT
+};
 
 
 enum	e_fract_rtrns
@@ -70,7 +79,7 @@ typedef struct s_mlx_data
 	void	*window;
 	char	*title_window;
 	t_img	image;
-	
+
 }				 t_mlx_data;
 
 typedef struct s_fractal_settings
@@ -78,6 +87,7 @@ typedef struct s_fractal_settings
 	double	escape_val;
 	double	zoom_factor;
 	int		iterations_depth;
+	double	shift_factor;
 }				 t_fractal_settings;
 
 typedef struct s_fractal
@@ -91,13 +101,11 @@ typedef struct s_fractal
 }				t_fractal;
 
 // int			init_fractal(int argc, char **argv, t_fractal **fractal);
-void				terminate_fractal(t_fractal **fractal);
 int					init_data(int argc, char **argv, t_fractal **fractal);
 char				*get_title_name(t_fractal *fractal);
 void				terminate_mlx(t_fractal *fractal);
 void				define_hooks(t_fractal *fractal);
 double				magnitude_squared_complex(t_complex_nbr z);
-t_complex_nbr		fractal_iteration(t_complex_nbr z, t_complex_nbr c);
 double				magnitude_squared_complex(t_complex_nbr z);
 double				map_pixel_to_complex_plane(int pixel, int max_pixel, double min_val, double max_val);
 t_complex_nbr		sum_complex(t_complex_nbr z1, t_complex_nbr z2);
@@ -111,6 +119,12 @@ unsigned int *get_plasma_palette(void);
 int render_a_fractal(t_fractal *fractal, int x, int y, const unsigned int *palette);
 unsigned int generate_color(double iteration, double max_iteration,
                             const unsigned int palette[], int num_colors);
+void			terminate_fractal(t_fractal **fractal, enum	e_fract_rtrns exit_code);
+void			how_to_use();
+t_complex_nbr	fractal_iteration(t_complex_nbr z, t_complex_nbr c, enum e_fractal_type fractol_type);
+void			define_hooks(t_fractal *fractal);
+void	shift_any(t_fractal *fractal, enum	e_shifting_director shift);
+void	perform_zoom(t_fractal *fractal, int x, int y, enum e_shifting_director zoom);
 
 
 

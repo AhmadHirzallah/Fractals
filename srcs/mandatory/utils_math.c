@@ -8,7 +8,7 @@
 t_complex_nbr square_complex(t_complex_nbr z)
 {
     t_complex_nbr result;
-    
+
     result.real_part = pow(z.real_part, 2) - pow(z.imgnry_part, 2);
     result.imgnry_part = 2.0 * z.real_part * z.imgnry_part;
     return result;
@@ -22,7 +22,7 @@ t_complex_nbr square_complex(t_complex_nbr z)
 t_complex_nbr sum_complex(t_complex_nbr z1, t_complex_nbr z2)
 {
     t_complex_nbr result;
-    
+
     result.real_part = z1.real_part + z2.real_part;
     result.imgnry_part = z1.imgnry_part + z2.imgnry_part;
     return result;
@@ -52,11 +52,16 @@ double magnitude_squared_complex(t_complex_nbr z)
 
 
 /*
- * fractal_iteration:
+ * fractal_iteration (where actual fractal computation happens):
  * Performs one iteration of the fractal function:
  * z = z^2 + c.
  */
-t_complex_nbr fractal_iteration(t_complex_nbr z, t_complex_nbr c)
+t_complex_nbr fractal_iteration(t_complex_nbr z, t_complex_nbr c, enum e_fractal_type fractol_type)
 {
+     if (fractol_type == BURNING_SHIP)
+    {
+        z.real_part = fabs(z.real_part);
+        z.imgnry_part = fabs(z.imgnry_part);
+    }
     return sum_complex(square_complex(z), c);
 }

@@ -99,6 +99,14 @@ unsigned int generate_color(double iteration, double max_iteration,
  * Draws a pixel at coordinates (x, y) on the given image with the specified color.
  * The function assumes that the image's data address, line length, and bits per pixel
  * have been set up by a prior call to mlx_get_data_addr.
+ * - If the point does not escape within the maximum number of iterations (i.e., i reaches iterations_depth),
+ *      it is considered inside the fractal and is colored black (or the default color):
+ * - Once a point is determined to have escaped (i.e., the magnitude exceeds the escape threshold),
+ *      the corresponding pixel is colored. The number of iterations (i) it took for z to escape is used to generate the color.
+
+c
+Copy
+
  */
 void put_pixel(int x, int y, t_img *img, int color)
 {
