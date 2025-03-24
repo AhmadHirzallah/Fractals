@@ -1,0 +1,118 @@
+#ifndef FRACTAL_H
+#define FRACTAL_H
+
+#include "libft.h"
+# include "mlx.h"
+# include <X11/X.h>
+# include <X11/keysym.h>
+# include <math.h>
+
+# define ITER_DEPTH 100
+# define ZOOM_FACTOR 1.30
+# define ESCAPE_RADIUS 2.0
+// # define WIDTH 1400
+// # define HEIGHT 1200
+# define WIDTH 1000
+# define HEIGHT 800
+
+
+# define X_MIN -2.5
+# define X_MAX 1.0
+# define Y_MIN -1.5
+# define Y_MAX 1.5
+
+#define NUM_COLORS 10
+
+
+
+
+enum	e_fract_rtrns
+{
+	OK,
+	ERR_WRNG_ARGV,
+	ERR_MALLOC_FAIL
+};
+
+typedef struct s_img
+{
+	void	*img_ptr;
+	char	*img_pixels_ptr;
+	int		bits_per_pixel;
+	int		endian;
+	int		size_line;
+}				t_img;
+
+
+typedef struct s_complex_nbr
+{
+	double		real_part;
+	double		imgnry_part;
+}				 t_complex_nbr;
+
+typedef struct s_axises
+{
+	double		x_pos_axis;
+	double		x_neg_axis;
+	double		y_pos_axis;
+	double		y_neg_axis;
+}				 t_axises;
+
+enum	e_fractal_type
+{
+	JULIA,
+	MANDELBROT,
+	BURNING_SHIP
+};
+
+typedef struct s_mlx_data
+{
+	void	*conn_display;
+	void	*window;
+	char	*title_window;
+	t_img	image;
+	
+}				 t_mlx_data;
+
+typedef struct s_fractal_settings
+{
+	double	escape_val;
+	double	zoom_factor;
+	int		iterations_depth;
+}				 t_fractal_settings;
+
+typedef struct s_fractal
+{
+	t_mlx_data				mlx_data;
+	t_complex_nbr			z;
+	t_complex_nbr			c;
+	enum e_fractal_type		fractol_type;
+	t_axises				axises;
+	t_fractal_settings		settings_fractal;
+}				t_fractal;
+
+// int			init_fractal(int argc, char **argv, t_fractal **fractal);
+void				terminate_fractal(t_fractal **fractal);
+int					init_data(int argc, char **argv, t_fractal **fractal);
+char				*get_title_name(t_fractal *fractal);
+void				terminate_mlx(t_fractal *fractal);
+void				define_hooks(t_fractal *fractal);
+double				magnitude_squared_complex(t_complex_nbr z);
+t_complex_nbr		fractal_iteration(t_complex_nbr z, t_complex_nbr c);
+double				magnitude_squared_complex(t_complex_nbr z);
+double				map_pixel_to_complex_plane(int pixel, int max_pixel, double min_val, double max_val);
+t_complex_nbr		sum_complex(t_complex_nbr z1, t_complex_nbr z2);
+t_complex_nbr		square_complex(t_complex_nbr z);
+int create_trgb(int t, int r, int g, int b);
+void put_pixel(int x, int y, t_img *img, int color);
+int					paint_fractal(t_fractal *fractal);
+double normalized_iteration(double iteration, double maxIteration);
+unsigned int interpolate_color(double t, unsigned int color1, unsigned int color2);
+unsigned int *get_plasma_palette(void);
+int render_a_fractal(t_fractal *fractal, int x, int y, const unsigned int *palette);
+unsigned int generate_color(double iteration, double max_iteration,
+                            const unsigned int palette[], int num_colors);
+
+
+
+
+#endif

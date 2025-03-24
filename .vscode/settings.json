@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "fractal.h": "c",
+        "math.h": "c",
+        "mytxt": "c"
+    }
+}

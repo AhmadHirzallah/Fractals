@@ -1,0 +1,430 @@
+#include <math.h>
+#include "fractal.h"   // Contains t_fractal, t_complex_nbr, etc.
+#include "mlx.h"       // Your MLX library header
+
+/*
+ * create_trgb
+ *
+ * Combines transparency (t), red (r), green (g), and blue (b) components
+ * into a single 32-bit color value.
+ */
+int create_trgb(int t, int r, int g, int b)
+{
+    int color;
+
+    color = (t << 24) | (r << 16) | (g << 8) | b;
+    return (color);
+}
+
+/*
+ * get_color_sine
+ *
+ * Computes a smooth, periodic color based on the normalized iteration value.
+ * The iteration count (iteration) is normalized by max_iter into the range [0,1].
+ * Then sine functions generate values for each channel:
+ *    red   = sin(5 * t + 0)
+ *    green = sin(5 * t + 2)
+ *    blue  = sin(5 * t + 4)
+ *
+ * These sine waves are scaled and shifted so that the result lies in [0,255].
+ */
+int get_color_sine(double iteration, double max_iter)
+{
+    double t;
+    int red;
+    int green;
+    int blue;
+
+    t = iteration / max_iter;
+    red   = (int)(sin(5.0 * t + 0.0) * 127 + 128);
+    green = (int)(sin(5.0 * t + 2.0) * 127 + 128);
+    blue  = (int)(sin(5.0 * t + 4.0) * 127 + 128);
+    return (create_trgb(0, red, green, blue));
+}
+
+/*
+ * get_color: simply wraps get_color_sine.
+ */
+int generate_color(double iteration, double max_iter)
+{
+    return get_color_sine(iteration, max_iter);
+}
+
+/*
+ * put_pixel
+ *
+ * Draws a pixel at coordinates (x, y) on the given image with the specified color.
+ * The function assumes that the image's data address, line length, and bits per pixel
+ * have been set up by a prior call to mlx_get_data_addr.
+ */
+void put_pixel(int x, int y, t_img *img, int color)
+{
+    char *dst;
+
+    dst = img->img_pixels_ptr + y * img->size_line + x * (img->bits_per_pixel / 8);
+    *(unsigned int *)dst = color;
+}
+#include "fractal.h"
+
+// static int press_mouse_handler(int button, int x, int y, t_fractal *fractal)
+// {
+//     if (button == 5)
+// 		zoom_in(fractal, x, y);
+// 	else if (button == 4)
+// 		zoom_out(fractal, x, y);
+// 	if (button == 1)
+// 	{
+// 		if (fractal->pallet == RAINBOW)
+// 			fractal->pallet = MAGMA;
+// 		else
+// 			fractal->pallet = RAINBOW;
+// 	}
+// 	fractal_render(fractal);
+// 	return (0);
+// }
+
+// static int press_keyboard_handler(int keycode, t_fractal *fractal)
+// {
+//     if (keycode == XK_Escape)
+//         terminate_fractal(&fractal);
+//     else if (keycode == XK_Right)
+// 		shift_x(fractal, 1);
+// 	else if (keycode == XK_Left)
+// 		shift_x(fractal, -1);
+// 	else if (keycode == XK_Up)
+// 		shift_y(fractal, -1);
+// 	else if (keycode == XK_Down)
+// 		shift_y(fractal, 1);
+// 	// else if (keycode == XK_plus || keycode == XK_equal)
+// 	// 	fractal->iter_ceil += 50;
+// 	// else if (keycode == XK_minus)
+// 	// 	fractal->iter_ceil -= 50;
+// 	// else if (keycode == XK_s || keycode == XK_S)
+// 	// {
+// 	// 	if (fractal-> sharpness < 2048)
+// 	// 		fractal->sharpness += 10;
+// 	// }
+// 	// else if (keycode == XK_d || keycode == XK_D)
+// 	// 	if (fractal-> sharpness > 50)
+// 	// 		fractal->sharpness -= 10;
+// 	// fractal_render(data);
+// 	return (0);
+// }
+
+// static int exit_handler(t_fractal *fractal)
+// {
+//     terminate_fractal(&fractal);
+//     exit(0);
+// }
+
+
+// void define_hooks(t_fractal *fractal)
+// {
+//     mlx_hook(fractal->mlx_data.window, KeyPress, KeyPressMask, press_keyboard_handler, fractal);
+//     mlx_hook(fractal->mlx_data.window, ButtonPress, ButtonPressMask, press_mouse_handler, fractal);
+//     mlx_hook(fractal->mlx_data.window, DestroyNotify, StructureNotifyMask, exit_handler, fractal);
+// }
+#include "fractal.h"
+
+static int	init_mlx(t_fractal **fractal)
+{
+	(*fractal)->mlx_data.conn_display = mlx_init();
+	if ((*fractal)->mlx_data.conn_display == NULL)
+		terminate_fractal(fractal);
+	(*fractal)->mlx_data.window = mlx_new_window((*fractal)->mlx_data.conn_display,
+													WIDTH,
+													HEIGHT,
+													get_title_name(*fractal));
+	if ((*fractal)->mlx_data.window == NULL)
+		terminate_fractal(fractal);
+	(*fractal)->mlx_data.image.img_ptr = mlx_new_image((*fractal)->mlx_data.conn_display, 
+														WIDTH, HEIGHT);
+	if ((*fractal)->mlx_data.image.img_ptr == NULL)
+		terminate_fractal(fractal);
+	(*fractal)->mlx_data.image.img_pixels_ptr = mlx_get_data_addr((*fractal)->mlx_data.image.img_ptr,
+																	&(*fractal)->mlx_data.image.bits_per_pixel,
+																	&(*fractal)->mlx_data.image.size_line,
+																	&(*fractal)->mlx_data.image.endian);
+	if ((*fractal)->mlx_data.image.img_ptr == NULL)
+		terminate_fractal(fractal);
+	return (0);
+}
+
+static int	init_fractal(char **argv, t_fractal **fractal)
+{
+	(*fractal)->settings_fractal.iterations_depth = ITER_DEPTH;
+	(*fractal)->settings_fractal.escape_val = ESCAPE_RADIUS;
+	(*fractal)->axises.x_neg_axis = -2;
+	(*fractal)->axises.x_pos_axis = 2;
+	(*fractal)->axises.y_neg_axis = -1.5;
+	(*fractal)->axises.y_pos_axis = 1.5;
+	(*fractal)->z.real_part = 0.0;
+	(*fractal)->z.imgnry_part = 0.0;
+	if ((*fractal)->fractol_type == JULIA)
+	{
+		(*fractal)->c.real_part = ft_atodbl(argv[2]);
+		(*fractal)->c.imgnry_part = ft_atodbl(argv[3]);
+	}
+	return (0);
+}
+		
+
+int     init_data(int argc, char **argv, t_fractal **fractal)
+{
+	char	*cmpr_str;
+
+	(*fractal) = ft_calloc(1, sizeof(t_fractal));
+	if (*fractal == NULL)
+		exit(ERR_MALLOC_FAIL);
+	cmpr_str = str_to_lower(argv[1]);
+	if ((argc == 2 || str_cmpr(cmpr_str, "mandelbrot") == 0))
+		(*fractal)->fractol_type = MANDELBROT;
+	else if ((argc == 4) && str_cmpr(cmpr_str, "julia") == 0)
+		(*fractal)->fractol_type = JULIA;
+	else if (argc == 2 && str_cmpr(cmpr_str, "burning_ship") == 0)
+		(*fractal)->fractol_type = BURNING_SHIP;
+	else
+	{
+		ft_putstr_fd("Wronge Input.\n", 2);
+		ft_putstr_fd("Usage:\n\n\t./fractol mandelbrot\n", 2);
+		ft_putstr_fd("\t./fractol julia <real> <imaginary>\n", 2);
+		ft_putstr_fd("\t./fractol third_fractal\n", 2);
+		free(cmpr_str);
+		exit(ERR_WRNG_ARGV);
+	}
+	free(cmpr_str);
+	init_fractal(argv, fractal);
+	init_mlx(fractal);
+	// define_hooks(*fractal);
+	return (OK);
+}
+#include "fractal.h"
+
+int main(int argc, char **argv)
+{
+    t_fractal   *fractal;
+
+    init_data(argc, argv, &fractal);
+
+    paint_fractal(fractal);
+    
+    
+}#include <math.h>
+#include "mlx.h"
+#include "libft.h"
+#include "fractal.h"
+
+/*
+ * Sets the initial complex numbers for the current pixel.
+ * For Mandelbrot, the constant c is derived from the pixel coordinates,
+ * and z is set to 0.
+ * For Julia, c is constant (already set during initialization),
+ * and z is mapped from the pixel coordinates.
+ */
+// static void set_initial_complex_nbrs(t_fractal *fractal, int x, int y)
+// {
+//     if (fractal->fractol_type == JULIA)
+//     {
+//         fractal->z.real_part = map_pixel_to_complex_plane(x, WIDTH,
+//                                     fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+//         fractal->z.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+//                                     fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+//     }
+//     else if(fractal->fractol_type == MANDELBROT)
+//     {
+//         fractal->c.real_part = map_pixel_to_complex_plane(x, WIDTH,
+//                                     fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+//         fractal->c.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+//                                     fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+//         fractal->z.real_part = 0.0;
+//         fractal->z.imgnry_part = 0.0;
+//     }
+// 	else if (fractal->fractol_type == BURNING_SHIP)
+// 	{
+// 		fractal->c.real_part = fabs(fractal->c.real_part);
+//         fractal->c.imgnry_part = fabs(fractal->c.imgnry_part);
+// 	}
+// }
+
+
+/*
+ * Sets the initial complex numbers for the current pixel.
+ * For JULIA, z is mapped from the pixel; for Mandelbrot/Burning Ship, c is derived
+ * from the pixel coordinates and z is set to 0.
+ * In Burning Ship, c is made positive.
+ */
+static void set_initial_complex_nbrs(t_fractal *fractal, int x, int y)
+{
+    if (fractal->fractol_type == JULIA)
+    {
+        fractal->z.real_part = map_pixel_to_complex_plane(x, WIDTH,
+                                    fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+        fractal->z.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+                                    fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+    }
+    else  // Mandelbrot or Burning Ship
+    {
+        fractal->c.real_part = map_pixel_to_complex_plane(x, WIDTH,
+                                    fractal->axises.x_neg_axis, fractal->axises.x_pos_axis);
+        fractal->c.imgnry_part = map_pixel_to_complex_plane(y, HEIGHT,
+                                    fractal->axises.y_pos_axis, fractal->axises.y_neg_axis);
+        fractal->z.real_part = 0.0;
+        fractal->z.imgnry_part = 0.0;
+        if (fractal->fractol_type == BURNING_SHIP)
+        {
+            fractal->c.real_part = fabs(fractal->c.real_part);
+            fractal->c.imgnry_part = fabs(fractal->c.imgnry_part);
+        }
+    }
+}
+
+
+/*
+ * Render the fractal for a given pixel.
+ * Uses pow() from <math.h> for squaring operations.
+ */
+int render_a_fractal(t_fractal *fractal, int x, int y)
+{
+    long int	i;
+	long double	escape_limit_sq;
+    t_complex_nbr z;
+	
+
+    set_initial_complex_nbrs(fractal, x, y);
+	z = fractal->z;
+	escape_limit_sq = pow(fractal->settings_fractal.escape_val, 2);
+	i = 0;
+    while (i < fractal->settings_fractal.iterations_depth)
+    {
+		z = fractal_iteration(z, fractal->c);
+		if (magnitude_squared_complex(z) > escape_limit_sq)
+		{
+			put_pixel(x, y, &fractal->mlx_data.image,
+                         generate_color(i, fractal->settings_fractal.iterations_depth));
+            return 0;
+		}
+        i++;
+    }
+	put_pixel(x, y, &fractal->mlx_data.image,
+					create_trgb(0, 0, 0, 0));
+    return (0);
+}
+
+/*
+ * Main painting loop: iterates over every pixel.
+ */
+int paint_fractal(t_fractal *fractal)
+{
+    int y;
+    int x;
+
+	y = 0;
+    while (y < HEIGHT)
+    {
+        x = 0;
+        while (x < WIDTH)
+        {
+            render_a_fractal(fractal, x, y);
+            ++x;
+        }
+        ++y;
+    }
+	mlx_put_image_to_window(fractal->mlx_data.conn_display, fractal->mlx_data.window,
+							fractal->mlx_data.image.img_ptr, 0, 0);
+
+    mlx_loop(fractal->mlx_data.conn_display);
+    return (0);
+}
+#include "fractal.h"
+
+void    terminate_mlx(t_fractal *fractal)
+{
+	if (fractal->mlx_data.image.img_pixels_ptr)
+		mlx_destroy_image(fractal->mlx_data.conn_display,
+                        fractal->mlx_data.image.img_pixels_ptr);
+	if (fractal->mlx_data.window)
+		mlx_destroy_window(fractal->mlx_data.conn_display, 
+                        fractal->mlx_data.window);
+	if (fractal->mlx_data.conn_display)
+		mlx_destroy_display(fractal->mlx_data.conn_display);
+}
+
+void    terminate_fractal(t_fractal **fractal)
+{
+    terminate_mlx(*fractal);
+    free(*fractal);
+    (*fractal) = NULL;
+    exit(ERR_MALLOC_FAIL);
+}#include "fractal.h"
+
+
+char    *get_title_name(t_fractal *fractal)
+{
+    if (fractal->fractol_type == MANDELBROT)
+        fractal->mlx_data.title_window = "Mandelbrot Fractal";
+    else if (fractal->fractol_type == JULIA)
+        fractal->mlx_data.title_window = "JULIA Fractal";
+    else if (fractal->fractol_type == BURNING_SHIP)
+        fractal->mlx_data.title_window = "Burning Ship Fractal";
+    return (fractal->mlx_data.title_window);
+}#include "fractal.h"
+
+/*
+ * square_complex:
+ * Computes the square of a complex number.
+ * z^2 = (x + i*y)^2 = (x^2 - y^2) + i*(2*x*y)
+ */
+t_complex_nbr square_complex(t_complex_nbr z)
+{
+    t_complex_nbr result;
+    
+    result.real_part = pow(z.real_part, 2) - pow(z.imgnry_part, 2);
+    result.imgnry_part = 2.0 * z.real_part * z.imgnry_part;
+    return result;
+}
+
+/*
+ * sum_complex:
+ * Returns the sum of two complex numbers:
+ * z1 + z2 = (x1 + x2) + i*(y1 + y2)
+ */
+t_complex_nbr sum_complex(t_complex_nbr z1, t_complex_nbr z2)
+{
+    t_complex_nbr result;
+    
+    result.real_part = z1.real_part + z2.real_part;
+    result.imgnry_part = z1.imgnry_part + z2.imgnry_part;
+    return result;
+}
+
+/*
+ * map_pixel_to_complex_plane:
+ * Maps a pixel coordinate (x or y) to the corresponding complex plane value.
+ */
+double map_pixel_to_complex_plane(int pixel, int max_pixel, double min_val, double max_val)
+{
+    return (min_val + (max_val - min_val) * ((double)pixel / max_pixel));
+}
+
+
+/*
+ * magnitude_squared_complex:
+ * Returns the squared magnitude of a complex number:
+ * |z|^2 = x^2 + y^2.
+ * Using squared magnitude avoids an expensive sqrt() call.
+ */
+double magnitude_squared_complex(t_complex_nbr z)
+{
+    return pow(z.real_part, 2) + pow(z.imgnry_part, 2);
+}
+
+
+/*
+ * fractal_iteration:
+ * Performs one iteration of the fractal function:
+ * z = z^2 + c.
+ */
+t_complex_nbr fractal_iteration(t_complex_nbr z, t_complex_nbr c)
+{
+    return sum_complex(square_complex(z), c);
+}
