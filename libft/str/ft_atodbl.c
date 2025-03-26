@@ -1,9 +1,21 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_atodbl.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: ahirzall <ahirzall@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2025/03/24 20:54:51 by ahirzall          #+#    #+#             */
+/*   Updated: 2025/03/24 20:54:52 by ahirzall         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "libft.h"
 
 /*
  * ALPHA TO DOUBLE
  * similar to atoi, but dealing with floats
-*/
+ */
 double	ft_atodbl(char *s)
 {
 	long	integer_part;

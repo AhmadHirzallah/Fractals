@@ -1,34 +1,22 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   str_to_lower.c                                     :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ahirzall <ahirzall@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/24 20:53:04 by ahirzall          #+#    #+#             */
-/*   Updated: 2025/03/24 20:53:44 by ahirzall         ###   ########.fr       */
+/*   Created: 2025/03/24 17:26:20 by ahirzall          #+#    #+#             */
+/*   Updated: 2025/03/24 17:26:32 by ahirzall         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include "fractal.h"
 
-// Function to convert a string to lowercase
-char	*str_to_lower(const char *str)
+int	main(int argc, char **argv)
 {
-	size_t	length;
-	char	*lower_str;
-	size_t	i;
+	t_fractal	*fractal;
 
-	length = ft_strlen(str);
-	lower_str = (char *)malloc((length + 1) * sizeof(char));
-	if (lower_str == NULL)
-		return (NULL);
-	i = 0;
-	while (str[i] != '\0')
-	{
-		lower_str[i] = ft_tolower((unsigned char)str[i]);
-		i++;
-	}
-	lower_str[i] = '\0';
-	return (lower_str);
+	init_data(argc, argv, &fractal);
+	paint_fractal(fractal);
+	return (0);
 }
