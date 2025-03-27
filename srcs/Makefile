@@ -2,7 +2,7 @@ NAME        := ../fractol
 
 # Compiler settings
 CC          := cc
-CFLAGS      := -Wall -Wextra -Werror -I../include
+CFLAGS      := -Wall -Wextra -Werror -O3 -march=native -flto -I../include 
 LDFLAGS     := -lmlx -lXext -lX11 -lm -L../libs -lft -lftprintf
 
 # Directories
