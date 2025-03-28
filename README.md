@@ -3,6 +3,11 @@
 ## Project Overview
 The **Fractol** project is an exploration of fractals and computer graphics. It allows you to generate complex and visually appealing fractals, including the **Julia** and **Mandelbrot** sets. By leveraging zooming and coloring techniques, you can explore the infinite complexity of these fractals.
 
+### Project Demo (Press on Picture)
+
+[![Fractol Project Demo](https://img.youtube.com/vi/7rXLjtTH-oY/0.jpg)](https://www.youtube.com/watch?v=7rXLjtTH-oY)
+
+
 ## Features
 ### Fractals
 - **Julia Set** and **Mandelbrot Set** rendering.
